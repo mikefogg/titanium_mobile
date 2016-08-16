@@ -120,7 +120,7 @@ public class TiCameraActivity extends TiBaseActivity implements SurfaceHolder.Ca
 			} else {
 				previewWidth = (int) (previewHeight * aspectRatio + .5);
 			}
-			
+
 			super.onMeasure(MeasureSpec.makeMeasureSpec(previewWidth,
 					MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(
 					previewHeight, MeasureSpec.EXACTLY));
@@ -138,7 +138,7 @@ public class TiCameraActivity extends TiBaseActivity implements SurfaceHolder.Ca
 	{
 		// setting Fullscreen
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
-		
+
 		super.onCreate(savedInstanceState);
 
 		// checks if device has only front facing camera and sets it
@@ -212,7 +212,7 @@ public class TiCameraActivity extends TiBaseActivity implements SurfaceHolder.Ca
 		if (camera == null) {
 			return; // openCamera will have logged error.
 		}
-		
+
 		try {
 			//This needs to be called to make sure action bar is gone
 			if (android.os.Build.VERSION.SDK_INT < 11) {
@@ -224,7 +224,7 @@ public class TiCameraActivity extends TiBaseActivity implements SurfaceHolder.Ca
 		} catch(Throwable t) {
 			//Ignore this
 		}
-		
+
 		cameraActivity = this;
 		previewLayout.addView(preview, new FrameLayout.LayoutParams(
 				LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
@@ -286,7 +286,7 @@ public class TiCameraActivity extends TiBaseActivity implements SurfaceHolder.Ca
 
 		if (currentRotation == rotation && previewRunning) {
 			return;
-		}		
+		}
 
 		if (previewRunning) {
 			try {
@@ -295,7 +295,7 @@ public class TiCameraActivity extends TiBaseActivity implements SurfaceHolder.Ca
 				// ignore: tried to stop a non=existent preview
 			}
 		}
-		
+
 		//Set the proper display orientation
 		int cameraId = Integer.MIN_VALUE;
 		if (whichCamera == MediaModule.CAMERA_FRONT) {
@@ -307,10 +307,10 @@ public class TiCameraActivity extends TiBaseActivity implements SurfaceHolder.Ca
 		Camera.getCameraInfo(cameraId, info);
 
 		currentRotation = rotation;
-		
+
 		//Clockwise and anticlockwise
 		int degrees = 0, degrees2 = 0;
-		
+
 		//Let Camera display in same orientation as display
 		switch (currentRotation) {
 			case Surface.ROTATION_0: degrees = degrees2 = 0; break;
@@ -318,7 +318,7 @@ public class TiCameraActivity extends TiBaseActivity implements SurfaceHolder.Ca
 			case Surface.ROTATION_90: {degrees = 90; degrees2 = 270; } break;
 			case Surface.ROTATION_270: {degrees = 270; degrees2 = 90;} break;
 		}
-		
+
 		int result, result2;
 		if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
 			result = (info.orientation + degrees) % 360;
@@ -326,7 +326,7 @@ public class TiCameraActivity extends TiBaseActivity implements SurfaceHolder.Ca
 		} else {  // back-facing
 			result = (info.orientation - degrees + 360) % 360;
 		}
-		
+
 		//Set up Camera Rotation so jpegCallback has correctly rotated image
 		Parameters param = camera.getParameters();
 		if (info.facing == CameraInfo.CAMERA_FACING_FRONT) {
@@ -334,7 +334,7 @@ public class TiCameraActivity extends TiBaseActivity implements SurfaceHolder.Ca
 		} else {  // back-facing camera
 			result2 = (info.orientation + degrees2) % 360;
 		}
-		
+
 		camera.setDisplayOrientation(result);
 		param.setRotation(result2);
 
@@ -390,7 +390,7 @@ public class TiCameraActivity extends TiBaseActivity implements SurfaceHolder.Ca
 
 	/**
 	 * Computes the optimal preview size given the target display size and aspect ratio.
-	 * 
+	 *
 	 * @param supportPreviewSizes
 	 *            a list of preview sizes the camera supports
 	 * @param targetSize
@@ -419,14 +419,14 @@ public class TiCameraActivity extends TiBaseActivity implements SurfaceHolder.Ca
 				minAspectDiff = Math.abs(ratio - targetRatio);
 			}
 		}
-		
+
 		return optimalSize;
 	}
-	
+
 	/**
-	 * Computes the optimal picture size given the preview size. 
+	 * Computes the optimal picture size given the preview size.
 	 * This returns the maximum resolution size.
-	 * 
+	 *
 	 * @param sizes
 	 *            a list of picture sizes the camera supports
 	 * @return the optimal size of the picture
@@ -475,11 +475,11 @@ public class TiCameraActivity extends TiBaseActivity implements SurfaceHolder.Ca
 				// Save the picture in the internal data directory so it is private to this application.
 				imageFile = TiFileFactory.createDataFile("tia", ".jpg");
 			}
-			
+
 			FileOutputStream imageOut = new FileOutputStream(imageFile);
 			imageOut.write(data);
 			imageOut.close();
-			
+
 			if (saveToGallery) {
 				Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
 				Uri contentUri = Uri.fromFile(imageFile);
@@ -488,7 +488,7 @@ public class TiCameraActivity extends TiBaseActivity implements SurfaceHolder.Ca
 				activity.sendBroadcast(mediaScanIntent);
 			}
 			return imageFile;
-			
+
 		} catch (Throwable t) {
 			throw t;
 		}
@@ -497,14 +497,19 @@ public class TiCameraActivity extends TiBaseActivity implements SurfaceHolder.Ca
 	static public void takePicture()
 	{
 	    try {
+					Log.d(TAG, "[INFO] [takePicture] hit takePicture method");
 	        String focusMode = camera.getParameters().getFocusMode();
 	        if (!(focusMode.equals(Parameters.FOCUS_MODE_EDOF)
 	                || focusMode.equals(Parameters.FOCUS_MODE_FIXED) || focusMode
 	                .equals(Parameters.FOCUS_MODE_INFINITY))) {
+							Log.d(TAG, "[INFO] [takePicture] focusMode set to EDOF, FIXED, or INFINITY");
+
 	            AutoFocusCallback focusCallback = new AutoFocusCallback()
 	            {
 	                public void onAutoFocus(boolean success, Camera camera)
 	                {
+											Log.d(TAG, "[INFO] [takePicture] hit onAutoFocus callback");
+											Log.d(TAG, "[INFO] [takePicture] firing takePicture on camera");
 	                    camera.takePicture(shutterCallback, null, jpegCallback);
 	                    if (!success) {
 	                        Log.w(TAG, "Unable to focus.");
@@ -513,12 +518,18 @@ public class TiCameraActivity extends TiBaseActivity implements SurfaceHolder.Ca
 	                    // "cancelAutoFocus" causes the camera to crash on M (probably due to discontinued support of android.hardware.camera)
 	                    // We need to move to android.hardware.camera2 APIs as soon as we can.
 	                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+													Log.d(TAG, "[INFO] [takePicture] Build.VERSION.SDK_INT < Version M");
 	                        camera.cancelAutoFocus();
-	                    }
+	                    } else {
+													Log.d(TAG, "[INFO] [takePicture] Build.VERSION.SDK_INT >= Version M");
+											}
 	                }
 	            };
+							Log.d(TAG, "[INFO] [takePicture] firing autoFocus");
 	            camera.autoFocus(focusCallback);
 	        } else {
+							Log.d(TAG, "[INFO] [takePicture] focusMode not set");
+							Log.d(TAG, "[INFO] [takePicture] firing takePicture on camera");
 	            camera.takePicture(shutterCallback, null, jpegCallback);
 	        }
 	    } catch (Exception e) {
@@ -562,7 +573,7 @@ public class TiCameraActivity extends TiBaseActivity implements SurfaceHolder.Ca
 					TiFile theFile = new TiFile(imageFile, imageFile.toURI().toURL().toExternalForm(), false);
 					TiBlob theBlob = TiBlob.blobFromFile(theFile);
 					KrollDict response = MediaModule.createDictForImage(theBlob, theBlob.getMimeType());
-					
+
 					// add previewRect to response
 					KrollDict previewRect = new KrollDict();
 					if (optimalPreviewSize!=null){
@@ -573,9 +584,9 @@ public class TiCameraActivity extends TiBaseActivity implements SurfaceHolder.Ca
 						previewRect.put(TiC.PROPERTY_HEIGHT, 0);
 					}
 					response.put("previewRect", previewRect);
-					
+
 					successCallback.callAsync(callbackContext, response);
-				}				
+				}
 			} catch (Throwable t) {
 				if (errorCallback != null) {
 					KrollDict response = new KrollDict();
@@ -583,7 +594,7 @@ public class TiCameraActivity extends TiBaseActivity implements SurfaceHolder.Ca
 					errorCallback.callAsync(callbackContext, response);
 				}
 			}
-			
+
 
 			if (autohide) {
 				cameraActivity.finish();
@@ -622,7 +633,7 @@ public class TiCameraActivity extends TiBaseActivity implements SurfaceHolder.Ca
 
 		return frontCameraId;
 	}
-	
+
 	private static int getBackCameraId()
 	{
 		if (backCameraId == Integer.MIN_VALUE) {
@@ -715,7 +726,7 @@ public class TiCameraActivity extends TiBaseActivity implements SurfaceHolder.Ca
 		});
 
 	}
-	
+
 	@Override
 	public void onBackPressed()
 	{
@@ -726,16 +737,16 @@ public class TiCameraActivity extends TiBaseActivity implements SurfaceHolder.Ca
 		}
 		super.onBackPressed();
 	}
-	
+
 	@Override
-	public boolean onKeyDown (int keyCode, KeyEvent event) 
+	public boolean onKeyDown (int keyCode, KeyEvent event)
 	{
 		if (keyCode == KeyEvent.KEYCODE_MENU) {
 			//Workaround for http://code.google.com/p/android/issues/detail?id=61394
 			//Exists atleast till version 19.1 of support library
 			return true;
 		}
-		
+
 		return super.onKeyDown(keyCode, event);
 	}
 }
