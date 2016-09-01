@@ -57,6 +57,7 @@ public class TiCameraActivity extends TiBaseActivity implements SurfaceHolder.Ca
 	private static List<Size> supportedPreviewSizes;
 	private static int frontCameraId = Integer.MIN_VALUE; // cache
 	private static int backCameraId = Integer.MIN_VALUE; //cache
+	private static boolean blockAutoFocus = false;
 	private TiViewProxy localOverlayProxy = null;
 	private SurfaceView preview;
 	private PreviewLayout previewLayout;
@@ -497,39 +498,34 @@ public class TiCameraActivity extends TiBaseActivity implements SurfaceHolder.Ca
 	static public void takePicture()
 	{
 	    try {
-					Log.d(TAG, "[INFO] [takePicture] hit takePicture method");
 	        String focusMode = camera.getParameters().getFocusMode();
 	        if (!(focusMode.equals(Parameters.FOCUS_MODE_EDOF)
 	                || focusMode.equals(Parameters.FOCUS_MODE_FIXED) || focusMode
 	                .equals(Parameters.FOCUS_MODE_INFINITY))) {
-							Log.d(TAG, "[INFO] [takePicture] focusMode set to EDOF, FIXED, or INFINITY");
 
 	            AutoFocusCallback focusCallback = new AutoFocusCallback()
 	            {
 	                public void onAutoFocus(boolean success, Camera camera)
 	                {
-											Log.d(TAG, "[INFO] [takePicture] hit onAutoFocus callback");
-											Log.d(TAG, "[INFO] [takePicture] firing takePicture on camera");
+						if(blockAutoFocus) return;
+
+						blockAutoFocus = true;
+
 	                    camera.takePicture(shutterCallback, null, jpegCallback);
+
 	                    if (!success) {
-	                        Log.w(TAG, "Unable to focus.");
+	                         Log.w(TAG, "Unable to focus.");
 	                    }
-	                    // This is a Hotfix for TIMOB-20260
-	                    // "cancelAutoFocus" causes the camera to crash on M (probably due to discontinued support of android.hardware.camera)
-	                    // We need to move to android.hardware.camera2 APIs as soon as we can.
-	                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-													Log.d(TAG, "[INFO] [takePicture] Build.VERSION.SDK_INT < Version M");
-	                        camera.cancelAutoFocus();
-	                    } else {
-													Log.d(TAG, "[INFO] [takePicture] Build.VERSION.SDK_INT >= Version M");
-											}
+                        
+                        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+							camera.cancelAutoFocus();
+	                    }
 	                }
 	            };
-							Log.d(TAG, "[INFO] [takePicture] firing autoFocus");
+
+				blockAutoFocus = false;
 	            camera.autoFocus(focusCallback);
 	        } else {
-							Log.d(TAG, "[INFO] [takePicture] focusMode not set");
-							Log.d(TAG, "[INFO] [takePicture] firing takePicture on camera");
 	            camera.takePicture(shutterCallback, null, jpegCallback);
 	        }
 	    } catch (Exception e) {
